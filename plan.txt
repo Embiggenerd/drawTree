@@ -1,0 +1,20 @@
+User Experience:
+1. User can use text editor on the left to create or read articles (no visual diff b/t edit and read mode)
+2. User can use tree on the right to search articles in tree form
+  a. User clicks on a node to bring up article
+    1. What does a node look like?
+    2. Node per article, or node per paragraph?
+  b. To create new article, user clicks '+' symbol where node would go on tree
+    1. If not sure of node position, user clicks '+' on left, connects node later
+3. User can reference other articles or paragraphs  
+4. Search tree has two initial perspectives: 
+  a. Initial tree structure created by user
+  b. Strucure of references - this is a disorganized looking graph that goes across trees
+
+
+1. Add basic json -> tree drawing ability √
+2. Clicking on node displays corresponding text on the left. *
+3. Text inputted by user is represented by nodes in the tree
+  a. True representation of text is the json tree
+  b. Each node is a paragraph
+  c. Clicking on a node navigates to the paragapraph

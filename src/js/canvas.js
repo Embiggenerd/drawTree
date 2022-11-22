@@ -3,6 +3,23 @@ import utils from "./utils";
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext("2d");
 let tree = {};
+let treeFinishedDrawing = false;
+const animationOrder = [];
+const EDGE_Z_INDEX = 0;
+const NODE_Z_INDEX = 10;
+const newAnimation = (drawFunc, type) => {
+  let zindex = 0;
+  if (type === "NODE") {
+    zindex = NODE_Z_INDEX;
+  }
+  if (type === "EDGE") {
+    zindex = EDGE_Z_INDEX;
+  }
+  return {
+    drawFunc,
+    zindex,
+  };
+};
 
 // break down of building a tree in canvas
 // 1. draw one parent node
@@ -15,7 +32,7 @@ canvas.width = innerWidth;
 canvas.height = innerHeight;
 // c.translate(0, canvas.height);
 // c.scale(1, -1);
-const radius = 20;
+const radius = 50;
 const color = "blue";
 const mouse = {
   x: innerWidth / 2,
@@ -45,10 +62,6 @@ class Particle {
     this.radius = radius;
     this.color = color;
     this.name = name;
-    // this.velocity = {
-    //   x: Math.random() - .5,
-    //   y: Math.random() - .5
-    // }
   }
 
   draw() {
@@ -66,27 +79,16 @@ class Particle {
   }
 
   update(particles) {
-    this.draw();
-    // for (let i = 0; i < particles.length; i++) {
-    //   const p = particles[i];
-    //   if (this === p){
-    //     console.log("this === p")
-    //     continue
-    //   }
-    //   if (utils.distance(this.x, this.y, p.x, p.y) - this.radius * 2 <
-    //   0) {
-    //     console.log(
-    //       'collision detected'
-    //     )
-    //   }
-    // }
-    // this.x += this.velocity.x
-    // this.y += this.velocity.y
+    const anim = newAnimation(() => {
+      this.draw();
+    }, "NODE");
+    animationOrder.push(anim);
   }
 }
 
 const drawTree = (node, count = 0) => {
   const isRootNode = count === 0;
+  console.log("drawRree()", count);
   if (isRootNode) {
     // Root node has a fixed position
     const x = innerWidth / 2;
@@ -114,73 +116,21 @@ const drawTree = (node, count = 0) => {
 
     node.canvasNode = new Particle(x, y, radius, color, node.name);
     node.canvasNode.update();
-    // const d = utils.getIntercept(x, y, node.parent.canvasNode.x,node.parent.canvasNode.y)
-    // const m = utils.getSlope(x, y, node.parent.canvasNode.x,node.parent.canvasNode.y)
-    // console.log('distance of edge', d * m)
-    c.beginPath();
-    // Figure out how to add length
-    // const d = utils.distance(x, y, node.parent.canvasNode.x,node.parent.canvasNode.y)
-    // const d = utils.getIntercept(x, y, node.parent.canvasNode.x,node.parent.canvasNode.y)
-    const slope = utils.getSlope(
-      x,
-      y,
-      node.parent.canvasNode.x,
-      node.parent.canvasNode.y
-    );
-
-    // let beginpoint = utils.getbeginpointFromSlopeAndLength2(x, y, node.parent.canvasNode.x - x, node.parent.canvasNode.y - y, radius)
-    let beginpoint = utils.getEndpointFromSlopeAndLength(
-      x,
-      y,
-      slope,
-      radius,
-      node.parent.canvasNode.x - x,
-      node.parent.canvasNode.y - y
-    );
-
-    // Get distance from beginning points to node parents, then subtract radius to get distance of actual line
-    let distance =
-      utils.getDistance(
-        beginpoint.x,
-        beginpoint.y,
-        node.parent.canvasNode.x,
-        node.parent.canvasNode.y
-      ) - radius;
-
-    let endpoint = utils.getEndpointFromSlopeAndLength(
-      beginpoint.x,
-      beginpoint.y,
-      slope,
-      distance,
-      node.parent.canvasNode.x - x,
-      node.parent.canvasNode.y - y
-    );
-    console.log({
-      beginpoint2: beginpoint,
-      beginpoint1: { x, y },
-      slope,
-      slope2: utils.getSlope(x, y, beginpoint.x, beginpoint.y),
-      distance: radius,
-      distance2: utils.getDistance(x, y, beginpoint.x, beginpoint.y),
-      parnetName: node.parent.name,
-      name: node.name,
-    });
-    c.moveTo(beginpoint.x, beginpoint.y);
-    c.lineTo(endpoint.x, endpoint.y);
-    // c.globalCompositeOperation='source-out';
-    c.stroke();
-    // c.globalCompositeOperation='source-over';
-    // c.beginPath();
-    // c.arc(this.x, this.y, 5, 0, Math.PI * 2, false);
-    // c.fillStyle = "black";
-    // c.fill();
-    // c.stroke();
-    // c.closePath();
+    const drawEdge = () => {
+      c.beginPath();
+      c.moveTo(x, y);
+      c.lineTo(node.parent.canvasNode.x, node.parent.canvasNode.y);
+      // c.globalCompositeOperation='source-out';
+      c.stroke();
+    };
+    const anim = newAnimation(drawEdge, "EDGE");
+    animationOrder.push(anim);
     node.children.forEach((child) => {
       child.parent = node;
       drawTree(child, count + 1);
     });
   }
+  treeFinishedDrawing = true;
 };
 
 // Implementation
@@ -188,81 +138,51 @@ let particles;
 function init() {
   tree = {
     type: "circle",
-    name: "0",
+    name: "Martin",
     children: [
       {
         type: "circle",
-        name: "1",
+        name: "Phillip",
         children: [
           {
             type: "circle",
-            name: "3",
+            name: "Robert",
             children: [],
           },
           {
             type: "circle",
-            name: "4",
+            name: "Igor",
             children: [],
           },
         ],
       },
       {
         type: "circle",
-        name: "2",
+        name: "Asal",
         children: [],
       },
     ],
   };
-  // particles = [];
-  // circle = new Circle(300, 300, 100, 'black')
-  // circle2 = new Circle(null, null, 30, 'red')
-
-  // objects = []
-
-  // for (let i = 0; i < 4; i++) {
-  //   const radius = 80;
-  //   const color = "blue";
-  //   let x = utils.randomIntFromRange(radius, canvas.width - radius);
-  //   let y = utils.randomIntFromRange(radius, canvas.height - radius);
-
-  //   if (i !== 0) {
-  //     for (let j = 0; j < particles.length; j++) {
-  //       if (
-  //         utils.distance(x, y, particles[j].x, particles[j].y) - radius * 2 <
-  //         0
-  //       ) {
-  //         x = utils.randomIntFromRange(radius, canvas.width - radius * 2);
-  //         y = utils.randomIntFromRange(radius, canvas.height - radius);
-  //         j = -1;
-  //       }
-  //     }
-  //   }
-  //   particles.push(new Particle(x, y, radius, color));
 }
 
 // Animation Loop
 function animate() {
   requestAnimationFrame(animate);
-  c.clearRect(0, 0, canvas.width, canvas.height);
-  // circle.update()
-  // circle2.x = mouse.x
-  // circle2.y = mouse.y
-  // circle2.update()
+  if (!treeFinishedDrawing) {
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    drawTree(tree);
+    console.log(" animationOrder", animationOrder);
+    animationOrder
+      .sort((a, b) => {
+        return a.zindex - b.zindex;
+      })
+      .forEach((v) => {
+        v.drawFunc();
+      });
+      console.log(" animationOrder2", animationOrder);
 
-  // if(utils.getDistance(circle.x, circle.y, circle2.x, circle2.y) < circle.radius + circle2.radius) {
-  //   circle.color = 'red'
-  // } else {
-  //   circle.color = 'black'
-
-  // }
-
-  // console.log(utils.getDistance(circle.x, circle.y, circle2.x, circle2.y))
-
-  // c.fillText('HTML CANVAS BOILERPLATE', mouse.x, mouse.y)
-  // particles.forEach((particle) => {
-  //   particle.update(particles);
-  // });
-  drawTree(tree);
+    console.log("tree was drawn");
+  }
 }
 
 init();
